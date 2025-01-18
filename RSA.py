@@ -1,4 +1,6 @@
 import random
+import sys
+sys.setrecursionlimit(1100)
 
 class Mod:
 
@@ -40,19 +42,20 @@ class Mod:
     
     
 
-def is_composite(n:int, a:int, d:int, s:int)->bool:
-    res = Mod(a,n)**d
-    if(res==1 or res == n-1):
+
+def is_composite(n: int, a: int, d: int, s: int) -> bool:
+    x = Mod(a,n)**d
+    
+    if x.num == 1 or x.num == n-1:
         return False
     
-    for _ in range(1,s):
-        res*=2
-        if(res==n-1):
+    for _ in range(s - 1):
+        x**=2
+        if x.num == n-1:
             return False
-        
     return True
 
-def is_prime(n:int, iter:int)->bool:
+def is_prime(n:int, iter:int=3)->bool:
 
     if(n < 4):
         return n == 2 or n == 3
@@ -63,18 +66,21 @@ def is_prime(n:int, iter:int)->bool:
     while((d & 1) == 0):
         d >>= 1
         s+=1
-    
+
     for _ in range(iter):
-        a = 2+ random.randint()%(n-3)
-        if(is_composite(n,a,d,s)):
+        a = random.randint(2, n - 2)
+        if is_composite(n, a, d, s):
             return False
         
     return True
 
-def gen_prime(bits:int):
-    ans=random.getrandbits(bits)
-    while(not is_prime(ans)):
-        continue
-    return ans
+def gen_prime(bits:int=1024):
 
-
+    while True:
+        n = random.getrandbits(bits) | 1
+        if is_prime(n):
+            return n
+        
+p = gen_prime()
+q = gen_prime()
+print(p,q,sep="\n\n")
