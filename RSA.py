@@ -94,101 +94,113 @@ def gen_prime(bits:int=1024):
 
     while True:
         n = random.getrandbits(bits) | 1
-        if is_prime(n):
+        if ((1<<(bits-1))<n) and is_prime(n):
             return n
 
 def gen_d(fi_n:int):
     while True:
         d = random.randint(1,fi_n)
-        if math.gcd(d,fi_n):
+        if math.gcd(d,fi_n)==1:
             return d
 
-def mgf(seed,len):
-    h_len = hashlib.sha256().digest_size
-    if len > 2**32 * h_len:
-        raise ValueError("Máscara muito longa para aplicar mgf")
-     
-    t=b""
+def rsa_encrypt(msg, e, n):
+    m = int.from_bytes(msg, 'big')
+    c = pow(m, e, n)
+    return c.to_bytes((n.bit_length() + 7) // 8, 'big')
 
-    for i in range(math.ceil(len/h_len)):
-        c = i.to_bytes(4, byteorder="big")
-        t += hashlib.sha256(seed+c).digest()
-
-    return  t[:len]
-
-def oape_encode(msg,enLen=128):
-
-    hLen = hashlib.sha256().digest_size
-    mLen = len(msg)
-
-    psLen = enLen - mLen -2*hLen-1
-
-    if(mLen>psLen):
-        raise ValueError("Mensagem muito longa para ser encriptada por OAEP")
-    
-    PS = b"\x00" * psLen
-
-    DB = PS+b"\x01" +msg
-    print(DB)
-    
-    seed = os.urandom(hLen)
-    dbMask = mgf(seed, enLen-hLen)
-    maskedDB = bytes(x ^ y for x, y in zip(DB, dbMask))
-    
-    seedMask = mgf(maskedDB, hLen)
-    maskedSeed = bytes(x ^ y for x, y in zip(seed, seedMask))
-    
-    EM = maskedSeed + maskedDB
-    
-    return EM
-
-
-# p = gen_prime()
-# q = gen_prime()
-# fi_n= (p-1)*(q-1)
-# d = gen_d(fi_n)
-# e= mod_inv(d,fi_n)
-
-
-def oaep_decode(EM,enLen =128):
-    hLen = hashlib.sha256().digest_size
-    if(enLen<hLen+1):
-        raise ValueError("Mensagem muito curta para ser decriptada por OAEP")
-
-    maskedSeed = EM[:hLen]
-    maskedDB = EM[hLen:]
-
-    seedMask = mgf(maskedDB,hLen)
-    
-    seed = bytes(x ^ y for x, y in zip(maskedSeed, seedMask))
-
-    dbMask = mgf(seed,enLen-hLen)
-    DB = bytes(x ^ y for x, y in zip(maskedSeed, dbMask))
-
-
-    print("******:",DB)
-
-    PS, M = DB[hLen:].split(b'\x01', 1) 
-    return M
+def rsa_decrypt(cipher, d, n):
+    c = int.from_bytes(cipher, 'big')
+    m = pow(c, d, n)
+    return m.to_bytes((n.bit_length() + 7) // 8, 'big')
 
 EM = b"\x04"  
 
 
-message = oape_encode(EM)
-print(oaep_decode(message))
+
+def mgf(seed: bytes, mask_len: int):
+    h_len = hashlib.sha256().digest_size
+    if mask_len > (2 ** 32) * h_len:
+        raise ValueError("mask_len grande demais")
+
+    mask = b''
+    for i in range(math.ceil(mask_len / h_len)):
+        c = i.to_bytes(4, byteorder="big")
+        mask += hashlib.sha256(seed + c).digest()
+
+    return mask[:mask_len]
+
+def oaep_encode(message: bytes, k: int,label: bytes = b"") -> bytes:
+    h_len = hashlib.sha256().digest_size
+    m_len = len(message)
+
+    if m_len > k - 2 * h_len - 2:
+        raise ValueError("Mensagem muito longa")
+    
+    l_hash = hashlib.sha256(label).digest()
+
+    ps_len = k - m_len - 2 * h_len - 2
+    ps = b"\x00" * ps_len
+
+    db = l_hash + ps + b"\x01" + message
+
+    seed = os.urandom(h_len)
+
+    db_mask = mgf(seed, k - h_len - 1)
+    masked_db = bytes(x ^ y for x, y in zip(db, db_mask))
+
+    seed_mask = mgf(masked_db, h_len)
+    masked_seed = bytes(x ^ y for x, y in zip(seed, seed_mask))
+
+    em = b"\x00" + masked_seed + masked_db
+
+    return em
+
+def oaep_decode(em: bytes, k: int, label: bytes = b"") -> bytes:
+    h_len = hashlib.sha256().digest_size
+
+    if len(em) != k or k < 2 * h_len + 2:
+        raise ValueError("Erro de decriptação: Tamanho da mensagem incompatível")
+
+    masked_seed = em[1:h_len + 1]
+    masked_db = em[h_len + 1:]
+
+    l_hash = hashlib.sha256(label).digest()
+
+    seed_mask = mgf(masked_db, h_len)
+    seed = bytes(x ^ y for x, y in zip(masked_seed, seed_mask))
+
+    db_mask = mgf(seed, k - h_len - 1)
+    db = bytes(x ^ y for x, y in zip(masked_db, db_mask))
+
+    l_hash_prime = db[:h_len]
+    if l_hash_prime != l_hash:
+        raise ValueError("Mismatch entre os hashs das labels")
+
+    try:
+        ps, message = db[h_len:].split(b"\x01", 1)
+    except ValueError:
+        raise ValueError("Erro de decriptação: padding iválido")
 
 
+    return message
 
-# Recodar a decode
-# Ver se eu mecho para bytes
-#   psLen = enLen - mLen -2*hLen-1 -> VER SE TODOS ESSES VALORES ESTÃO EM BUYTES
-# Sera que eu preciso dividir a msg a ser encriptada?
-# Talvez tirar o enLen (?)
-#Formula for emLen:
-# The length of the encoded message emLen (or oLen) is determined by the size of the RSA modulus (n), as the encoded message will be used as an input to the RSA encryption algorithm.
+p = gen_prime()
+q = gen_prime()
+n = p*q
+fi_n= (p-1)*(q-1)
+d = gen_d(fi_n)
+e = mod_inv(d, fi_n)
+k = (n.bit_length() + 7) // 8
 
-# The length of emLen is defined as:
 
-# emLen = (n.bit_length() + 7) // 8
+message = b"banana pau torto"
+label = b"Label"
 
-# 
+encoded = oaep_encode(message, k, label)
+cipher = rsa_encrypt(encoded, e, n)
+decrypted = rsa_decrypt(cipher, d, n)
+decoded_message = oaep_decode(decrypted, k,label)
+
+print("Mensagem original:", message)
+print("Mensagem decodificada:", str(decoded_message, 'UTF-8'))
+
