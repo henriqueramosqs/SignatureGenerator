@@ -16,5 +16,11 @@ class TestSignaturesGeneratorClass(unittest.TestCase):
         expected_output = oaep_decode(oaep_encode(msg, enLen=128, seed=seed), enLen=128)
         self.assertEqual(oaep_decode(msg, enLen=128), expected_output)
 
+    def test_chaves_geradas_com_pelo_menos_1024_bits(self):
+        p = gen_prime()
+        q = gen_prime()
+        self.assertEqual(p.bit_length(), 1024)
+        self.assertEqual(q.bit_length(), 1024)
+
 if __name__ == "__main__":  
     unittest.main(verbosity=2)
