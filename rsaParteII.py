@@ -13,7 +13,7 @@ def cifrar_rsa(mensagem, chave_privada):
     mensagem_int = int.from_bytes(mensagem, 'big')
     # pow é uma biblioteca de exponenciação modular onde pow(mensagem_int, d, n) = (mensagem_int^d)modn.
     return pow(mensagem_int, d, n)
-
+    
 def assinatura_mensagem(mensagem, chave_privada):
     hash_mensagem = calcular_hash(mensagem)
     assinatura = cifrar_rsa(hash_mensagem, chave_privada)
@@ -25,10 +25,3 @@ def assinatura_mensagem(mensagem, chave_privada):
     # chr(b) converte o byte de volta para o caractere correspondente.
     assinatura_base64 = ''.join([chr(b) for b in base64.b64encode(assinatura_bytes)]) 
     return assinatura_base64
-
-if __name__ == "__main__":
-    mock_chave_privada = (123456789, 987654321987654321987654321987654321)
-    mensagem = "Testando assinatura"
-    assinatura = assinatura_mensagem(mensagem, mock_chave_privada)
-    print("Mensagem Original:", mensagem)
-    print("Assinatura (Base64):", assinatura)
