@@ -116,7 +116,7 @@ def mgf(seed,len):
 
     return  t[:len]
 
-def oape_encode(msg, enLen=128, seed=None):
+def oaep_encode(msg, enLen=128, seed=None):
 
     hLen = hashlib.sha256().digest_size
     mLen = len(msg)
@@ -169,14 +169,14 @@ def oaep_decode(EM,enLen =128):
 
     print("******:",DB)
 
-    PS, M = DB[hLen:].split(b'\x01', 1) 
+    M = DB[hLen:].split(b'\x01', 1) 
     return M
 
 EM = b"\x04"  
 
 
-message = oape_encode(EM)
-print(oaep_decode(message))
+# message = oape_encode(EM)
+# print(oaep_decode(message))
 
 
 
