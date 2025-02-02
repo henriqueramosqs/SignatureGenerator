@@ -129,7 +129,7 @@ def oaep_encode(msg, enLen=128, seed=None):
     PS = b"\x00" * psLen
 
     DB = PS+b"\x01" +msg
-    print(DB)
+    # print(DB)
     
     if seed is None:
         seed = os.urandom(hLen)
@@ -167,7 +167,7 @@ def oaep_decode(EM,enLen =128):
     DB = bytes(x ^ y for x, y in zip(maskedSeed, dbMask))
 
 
-    print("******:",DB)
+    # print("******:",DB)
 
     M = DB[hLen:].split(b'\x01', 1) 
     return M
