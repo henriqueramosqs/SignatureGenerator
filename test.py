@@ -19,8 +19,8 @@ class TestSignaturesGeneratorClass(unittest.TestCase):
     def test_chaves_geradas_com_pelo_menos_1024_bits(self):
         p = gen_prime()
         q = gen_prime()
-        self.assertEqual(p.bit_length(), 1024)
-        self.assertEqual(q.bit_length(), 1024)
+        self.assertGreaterEqual(p.bit_length(), 1024)
+        self.assertGreaterEqual(q.bit_length(), 1024)
 
 if __name__ == "__main__":  
     unittest.main(verbosity=2)
