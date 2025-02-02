@@ -116,7 +116,7 @@ def mgf(seed,len):
 
     return  t[:len]
 
-def oape_encode(msg,enLen=128):
+def oape_encode(msg, enLen=128, seed=None):
 
     hLen = hashlib.sha256().digest_size
     mLen = len(msg)
@@ -131,7 +131,8 @@ def oape_encode(msg,enLen=128):
     DB = PS+b"\x01" +msg
     print(DB)
     
-    seed = os.urandom(hLen)
+    if seed is None:
+        seed = os.urandom(hLen)
     dbMask = mgf(seed, enLen-hLen)
     maskedDB = bytes(x ^ y for x, y in zip(DB, dbMask))
     
