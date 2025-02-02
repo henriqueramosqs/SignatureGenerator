@@ -1,5 +1,5 @@
 from rsaParteI import *
-from rsaParteI import gen_prime
+from rsaParteIII import *
 from rsaParteII import *
 
 if __name__ == "__main__":
@@ -12,15 +12,15 @@ if __name__ == "__main__":
     chave_publica = mod_inv(chave_privada, fi_n)
     k = (n.bit_length() + 7) // 8
 
-    message = b"banana pau torto"
+    mensagem = b"banana pau torto"
     label = b"Label"
 
-    encoded = oaep_encode(message, k, label)
+    encoded = oaep_encode(mensagem, k, label)
     cipher = rsa_encrypt(encoded, chave_publica, n)
     decrypted = rsa_decrypt(cipher, chave_privada, n)
     decoded_message = oaep_decode(decrypted, k,label)
 
-    print("Mensagem original:", message)
+    print("Mensagem original:", mensagem)
     print("Mensagem decodificada:", str(decoded_message, 'UTF-8'))
 
     # Parte II
@@ -30,3 +30,17 @@ if __name__ == "__main__":
     assinatura = assinatura_mensagem(mensagem, mock_chave_privada)
     print("Mensagem Original:", mensagem)
     print("Assinatura (Base64):", assinatura)
+
+    # Parte III
+    
+    decoded_message = decode_base64(assinatura)
+    
+    if decoded_message:
+        print(f"Mensagem decodificada: {decoded_message}")
+
+        # Verificar a assinatura
+        is_valid = verify_signature(decoded_message, assinatura, chave_publica)
+        if is_valid:
+            print("Assinatura verificada com sucesso!")
+        else:
+            print("Assinatura inválida.")
