@@ -103,12 +103,16 @@ def gen_d(fi_n:int):
         if math.gcd(d,fi_n)==1:
             return d
 
-def rsa_encrypt(msg, e, n):
+def rsa_encrypt(msg, key):
+    e = key[0]
+    n = key[1]
     m = int.from_bytes(msg, 'big')
     c = pow(m, e, n)
     return c.to_bytes((n.bit_length() + 7) // 8, 'big')
 
-def rsa_decrypt(cipher, d, n):
+def rsa_decrypt(cipher, key):
+    d = key[0]
+    n = key[1]
     c = int.from_bytes(cipher, 'big')
     m = pow(c, d, n)
     return m.to_bytes((n.bit_length() + 7) // 8, 'big')
