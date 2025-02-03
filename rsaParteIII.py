@@ -1,6 +1,6 @@
 import base64
 from rsaParteI import gen_prime
-from rsaParteII import assinatura_mensagem, calcular_hash
+from rsaParteII import calcular_hash
 
 def mod_exp(base, exp, mod):
     result = 1
@@ -20,10 +20,6 @@ def gerar_chaves_rsa(bits=1024):
     d = pow(e, -1, phi)
     return (e, n), (d, n)
 
-chave_publica, chave_privada = gerar_chaves_rsa()
-mensagem = "Mensagem de teste"
-assinatura = assinatura_mensagem(mensagem, chave_privada)
-
 def verificar_assinatura_rsa(mensagem, assinatura, chave_publica):
     e, n = chave_publica
     message_hash = calcular_hash(mensagem)
@@ -32,6 +28,3 @@ def verificar_assinatura_rsa(mensagem, assinatura, chave_publica):
     decrypted_signature = mod_exp(assinatura_int, e, n)
     mensagem_hash_int = int.from_bytes(message_hash, byteorder='big')
     return decrypted_signature == mensagem_hash_int
-
-assinatura_valida = verificar_assinatura_rsa(mensagem, assinatura, chave_publica)
-print("Assinatura válida:", assinatura_valida)

@@ -81,3 +81,6 @@ if __name__ == "__main__":
     # input()
 
     # Parte III
+
+    assinatura_valida = verificar_assinatura_rsa(mensagem, assinatura, chave_publica)
+    print("Assinatura válida:", assinatura_valida)
