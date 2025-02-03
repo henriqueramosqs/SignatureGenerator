@@ -3,7 +3,9 @@ from rsaParteIII import *
 from rsaParteII import *
 
 if __name__ == "__main__":
+
     # Parte I
+
     p = gen_prime()
     q = gen_prime()
     n = p*q
@@ -32,15 +34,3 @@ if __name__ == "__main__":
     print("Assinatura (Base64):", assinatura)
 
     # Parte III
-    
-    decoded_message = decode_base64(assinatura)
-    
-    if decoded_message:
-        print(f"Mensagem decodificada: {decoded_message}")
-
-        # Verificar a assinatura
-        is_valid = verify_signature(decoded_message, assinatura, chave_publica)
-        if is_valid:
-            print("Assinatura verificada com sucesso!")
-        else:
-            print("Assinatura inválida.")

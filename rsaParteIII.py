@@ -1,25 +1,37 @@
 import base64
-import binascii
-from rsaParteII import calcular_hash
+from rsaParteI import gen_prime
+from rsaParteII import assinatura_mensagem, calcular_hash
 
-# Função para decodificar a mensagem em Base64
-def decode_base64(encoded_message):
-    try:
-        decoded_message = base64.b64decode(encoded_message)
-        return decoded_message
-    except Exception as e:
-        print(f"Erro na decodificação: {e}")
-        return None
-    
-def verify_signature(message, signature, public_key):
-    
-    message_hash = (message)
+def mod_exp(base, exp, mod):
+    result = 1
+    while exp > 0:
+        if exp % 2 == 1:
+            result = (result * base) % mod
+        base = (base * base) % mod
+        exp //= 2
+    return result
 
-    try:
-        if binascii.hexlify(signature) == binascii.hexlify(message_hash):
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Erro na verificação da assinatura: {e}")
-        return False
+def gerar_chaves_rsa(bits=1024):
+    p = gen_prime(bits)
+    q = gen_prime(bits)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = 65537
+    d = pow(e, -1, phi)
+    return (e, n), (d, n)
+
+chave_publica, chave_privada = gerar_chaves_rsa()
+mensagem = "Mensagem de teste"
+assinatura = assinatura_mensagem(mensagem, chave_privada)
+
+def verificar_assinatura_rsa(mensagem, assinatura, chave_publica):
+    e, n = chave_publica
+    message_hash = calcular_hash(mensagem)
+    assinatura_bytes = base64.b64decode(assinatura.encode('utf-8'))
+    assinatura_int = int.from_bytes(assinatura_bytes, byteorder='big')
+    decrypted_signature = mod_exp(assinatura_int, e, n)
+    mensagem_hash_int = int.from_bytes(message_hash, byteorder='big')
+    return decrypted_signature == mensagem_hash_int
+
+assinatura_valida = verificar_assinatura_rsa(mensagem, assinatura, chave_publica)
+print("Assinatura válida:", assinatura_valida)
